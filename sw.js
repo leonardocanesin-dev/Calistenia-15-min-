@@ -1,7 +1,7 @@
 // Service worker: guarda o app no aparelho para funcionar offline.
 // Estratégia "rede primeiro": com internet pega a versão nova; sem internet usa o cache.
 // Ao publicar uma versão nova, aumente VERSAO.
-const VERSAO = '2026.11.25-165318';
+const VERSAO = '2026.11.25-182821';
 const CACHE = `calistenia-${VERSAO}`;
 const ARQUIVOS = [
   './',

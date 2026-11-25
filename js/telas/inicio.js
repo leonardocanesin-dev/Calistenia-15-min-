@@ -27,7 +27,7 @@ export function telaInicio(main) {
   const idHoje = treinoDoDia(d, est);
   const stHoje = statusDoDia(est, d);
   const seq = sequencias(est);
-  const mes = resumoMes(est, d.getFullYear(), d.getMonth());
+  const mes = resumoMes(est, d.getFullYear(), d.getMonth(), { ateHoje: true });
   const feitos = Object.values(est.dias).filter((x) => x.status === 'feito').length;
   const sugestoes = exerciciosDoCircuito().map((id) => sugestao(est, id)).filter(Boolean);
   const totalRegs = est.registros.reduce((s, r) => s + totalReps(r), 0);
@@ -96,7 +96,7 @@ export function telaInicio(main) {
 
     <div class="stats">
       <div><strong>🔥 ${seq.atual}</strong><span>${seq.atual === 1 ? 'dia seguido' : 'dias seguidos'}</span></div>
-      <div><strong>${mes.pct}%</strong><span>do mês (${mes.feitos}/${mes.total})</span></div>
+      <div><strong>${mes.total ? `${mes.pct}%` : '–'}</strong><span>${mes.total ? `do mês (${mes.feitos}/${mes.total})` : 'do mês · conta a partir do 1º treino'}</span></div>
       <div><strong>${feitos}</strong><span>treinos feitos</span></div>
     </div>
 
@@ -112,7 +112,7 @@ export function telaInicio(main) {
     <h2 class="secao">Atalhos</h2>
     <nav class="atalhos">
       ${atalho('#/hoje', '▶&#xFE0E;', 'Treinos', idHoje && idHoje !== 'D' ? `Hoje: ${TREINOS[idHoje].nome}` : 'A, B, C e descanso', 'var(--A)')}
-      ${atalho('#/calendario', '▦', 'Calendário', `${mes.feitos} de ${mes.total} no mês`, 'var(--B)')}
+      ${atalho('#/calendario', '▦', 'Calendário', mes.total ? `${mes.feitos} de ${mes.total} no mês` : 'Seu mês aparece aqui', 'var(--B)')}
       ${atalho('#/progresso', '↗', 'Progresso', ultimoReg ? `${totalRegs} reps · último ${dataCurta(deISO(ultimoReg.data))}` : 'Gráficos e níveis', 'var(--C)')}
       ${atalho('#/ajustes', '⚙', 'Ajustes', backup, 'var(--alongamento)')}
     </nav>

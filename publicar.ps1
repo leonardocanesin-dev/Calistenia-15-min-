@@ -67,8 +67,8 @@ if ($LASTEXITCODE -ne 0) {
     exit 1
 }
 
-$dono = ((git remote get-url origin) -replace '^https://github.com/', '' -split '/')[0]
+$partes = (git remote get-url origin) -replace '^https://github.com/', '' -replace '\.git$', '' -split '/'
 Write-Host ''
 Write-Host "Pronto! Versão $versao publicada." -ForegroundColor Green
-Write-Host "Endereço do app: https://$dono.github.io/$Repositorio/"
+Write-Host "Endereço do app: https://$($partes[0]).github.io/$($partes[1])/"
 Write-Host 'O GitHub leva 1 a 2 minutos para colocar a versão nova no ar.'

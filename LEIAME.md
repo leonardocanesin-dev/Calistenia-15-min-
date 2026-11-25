@@ -22,7 +22,8 @@ Os dados ficam **só no aparelho** (sem login).
    > `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`
 4. **Ligue o GitHub Pages:** no repositório → **Settings** → **Pages** →
    *Source*: **Deploy from a branch** → *Branch*: **main** e **/ (root)** → **Save**.
-5. Espere 1–2 minutos. O app fica em: `https://SEU_USUARIO.github.io/calistenia/`
+5. Espere 1–2 minutos. O app fica em: `https://SEU_USUARIO.github.io/NOME_DO_REPOSITORIO/`
+   (deste projeto: **https://leonardocanesin-dev.github.io/Calistenia-15-min-/** — não renomeie o repositório, senão o endereço muda)
 
 ## 2. Instalar no celular
 

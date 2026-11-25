@@ -51,16 +51,41 @@ export function sequencias(est) {
   return { atual, melhor };
 }
 
-// Conclusão do mês: treinos feitos ÷ treinos planejados no mês inteiro
-// (dias trocados por descanso saem da conta).
-export function resumoMes(est, ano, mes) {
-  let feitos = 0;
-  let total = 0;
-  const d = new Date(ano, mes, 1);
-  for (; d.getMonth() === mes; d.setDate(d.getDate() + 1)) {
-    if (!treinoDoDia(d, est)) continue;
+// Treinos (A/B/C) da semana seg–dom que contém `data`: quantos feitos, quantos previstos
+// (dias trocados por descanso saem da conta) e quantos ainda faltam a partir de hoje.
+export function resumoSemana(est, data = hoje()) {
+  const seg = segundaDaSemana(data);
+  const hj = hoje();
+  let feitos = 0, total = 0, faltam = 0;
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(seg);
+    d.setDate(seg.getDate() + i);
+    const plan = treinoDoDia(d, est);
+    if (!plan || plan === 'D') continue;
     const st = statusDoDia(est, d);
     if (st === 'descanso') continue;
+    total++;
+    if (st === 'feito') feitos++;
+    else if (d >= hj && st !== 'pulado') faltam++;
+  }
+  return { feitos, total, faltam };
+}
+
+// Conclusão do mês: treinos feitos ÷ treinos planejados no mês inteiro
+// (dias trocados por descanso saem da conta).
+// Com { ateHoje: true }: só os treinos A/B/C até hoje (hoje entra só se já foi feito),
+// para o número não começar o mês lá embaixo por causa dos dias que ainda não chegaram.
+export function resumoMes(est, ano, mes, { ateHoje = false } = {}) {
+  let feitos = 0;
+  let total = 0;
+  const hj = hoje();
+  const d = new Date(ano, mes, 1);
+  for (; d.getMonth() === mes; d.setDate(d.getDate() + 1)) {
+    const plan = treinoDoDia(d, est);
+    if (!plan) continue;
+    const st = statusDoDia(est, d);
+    if (st === 'descanso') continue;
+    if (ateHoje && (plan === 'D' || d > hj || (d.getTime() === hj.getTime() && st !== 'feito'))) continue;
     total++;
     if (st === 'feito') feitos++;
   }

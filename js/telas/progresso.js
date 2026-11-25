@@ -2,7 +2,7 @@
 import { TREINOS } from '../dados/treinos.js';
 import { EXERCICIOS, nivelAtual } from '../dados/exercicios.js';
 import { getEstado, atualizar } from '../storage.js';
-import { semanaDoPlano, tempos } from '../plano.js';
+import { semanaDoPlano, tempos, resumoMes, resumoSemana, anoFinal } from '../plano.js';
 import { hoje, deISO, dataCurta } from '../datas.js';
 import { historico, sugestao, subirNivel, dispensar, metaReps, bateuMeta, SESSOES_PARA_SUBIR,
   totalReps, apagarComDia } from '../registros.js';
@@ -77,12 +77,16 @@ export function telaProgresso(main) {
 
 // ---------- Visão geral ----------
 let mostrarTodas = false;
-const SEMANAS_NO_GRAFICO = 12;
+const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 function secaoGeral(est) {
-  const semanaAtual = semanaDoPlano(hoje(), est.inicio);
-  const feitos = Object.values(est.dias).filter((d) => d.status === 'feito').length;
-  const totalGeral = est.registros.reduce((s, r) => s + totalReps(r), 0);
+  const d = hoje();
+  const semanaAtual = semanaDoPlano(d, est.inicio);
+  const t = tempos(semanaAtual);
+  const mes = resumoMes(est, d.getFullYear(), d.getMonth(), { ateHoje: true });
+  const sem = resumoSemana(est, d);
+  const faltaTxt = sem.feitos >= sem.total ? 'semana completa ✔'
+    : sem.faltam ? `${sem.faltam === 1 ? 'falta 1' : `faltam ${sem.faltam}`}` : 'semana encerrada';
   const sessoes = [...est.registros].sort((a, b) => (a.data === b.data ? b.id - a.id : a.data < b.data ? 1 : -1));
   const visiveis = mostrarTodas ? sessoes : sessoes.slice(0, 5);
 
@@ -90,13 +94,12 @@ function secaoGeral(est) {
     <section class="card geral">
       <h2>Geral</h2>
       <div class="stats">
-        <div><strong>${feitos}</strong><span>treinos feitos</span></div>
-        <div><strong>${totalGeral}</strong><span>repetições</span></div>
-        <div><strong>${semanaAtual}</strong><span>semana do plano</span></div>
+        <div><strong>${mes.total ? `${mes.pct}%` : '–'}</strong><span>${MESES[d.getMonth()]}</span><small>${mes.total ? `${mes.feitos} de ${mes.total} treinos até hoje` : 'conta a partir do 1º treino'}</small></div>
+        <div><strong>${sem.feitos}/${sem.total}</strong><span>na semana</span><small>${faltaTxt}</small></div>
+        <div><strong>Sem. ${semanaAtual}</strong><span>do plano</span><small>${t.esforco}s / ${t.pausa}s · até 31/12/${anoFinal(est)}</small></div>
       </div>
-      <h3 class="subtitulo">Repetições por semana</h3>
-      <div class="grafico">${est.registros.length ? graficoSemanas(est, semanaAtual)
-        : '<p class="nota vazio">Os gráficos aparecem depois do primeiro treino com repetições registradas.</p>'}</div>
+      <h3 class="subtitulo">Rumo ao próximo nível</h3>
+      ${rumoAoNivel(est, t.esforco)}
       ${sessoes.length ? `
         <h3 class="subtitulo">Treinos registrados</h3>
         <ul class="sessoes">${visiveis.map((r) => `
@@ -111,66 +114,37 @@ function secaoGeral(est) {
     </section>`;
 }
 
-// Barras: soma das repetições de todos os exercícios (sem isometrias) em cada semana do plano.
-function graficoSemanas(est, semanaAtual) {
-  const porSemana = new Map();
-  for (const r of est.registros) {
-    const s = semanaDoPlano(deISO(r.data), est.inicio);
-    const v = porSemana.get(s) ?? { reps: 0, treinos: 0 };
-    v.reps += totalReps(r);
-    v.treinos += 1;
-    porSemana.set(s, v);
-  }
-  const ultima = Math.max(semanaAtual, ...porSemana.keys());
-  const primeira = Math.max(1, ultima - SEMANAS_NO_GRAFICO + 1);
-  const semanas = [];
-  for (let s = primeira; s <= ultima; s++) semanas.push({ s, ...(porSemana.get(s) ?? { reps: 0, treinos: 0 }) });
-
-  const W = 320, H = 180, E = 34, Dir = 8, T = 16, B = 24;
-  const topo = Math.max(10, ...semanas.map((x) => x.reps));
-  const passo = [10, 20, 50, 100, 200, 250, 500, 1000].find((p) => topo / p <= 5) ?? 2000;
-  const maxY = Math.ceil((topo * 1.12) / passo) * passo;
-  const y = (v) => T + (1 - v / maxY) * (H - T - B);
-  const faixa = (W - E - Dir) / semanas.length;
-  const larg = Math.max(4, Math.min(26, faixa - 2));
-
-  const grade = [];
-  for (let v = 0; v <= maxY; v += passo) {
-    grade.push(`<line class="g-grade" x1="${E}" x2="${W - Dir}" y1="${y(v)}" y2="${y(v)}"/>
-      <text class="g-eixo" x="${E - 6}" y="${y(v) + 4}" text-anchor="end">${v}</text>`);
-  }
-  // Barra com topo arredondado (4px) e base reta no eixo.
-  const barra = (x, topoY, w) => {
-    const h = y(0) - topoY;
-    if (h <= 0) return '';
-    const r = Math.min(4, h, w / 2);
-    return `M${x} ${y(0)}V${topoY + r}Q${x} ${topoY} ${x + r} ${topoY}H${x + w - r}Q${x + w} ${topoY} ${x + w} ${topoY + r}V${y(0)}Z`;
+// Barra por exercício: pior volta do último treino no nível atual, comparada com a meta.
+// Na meta (barra cheia) nas 3 voltas por 2 treinos seguidos = hora de subir de nível.
+function rumoAoNivel(est, esforco) {
+  const linha = (id) => {
+    const ex = EXERCICIOS[id];
+    const nv = nivelAtual(id, est.niveis);
+    const meta = ex.isometria ? esforco : metaReps(esforco);
+    const ult = historico(est, id).filter((h) => h.nivel === nv.indice).at(-1);
+    const pior = ult ? Math.min(...ult.valores) : null;
+    const pct = pior == null ? 0 : Math.min(100, (100 * pior) / meta);
+    const un = ex.isometria ? 's' : '';
+    const subir = !!sugestao(est, id);
+    const topo = nv.indice >= nv.total - 1 && pior != null && pior >= meta;
+    const valor = pior == null ? '<small>—</small>' : `${pior}/${meta}${un}`;
+    const dica = pior == null ? `Nível ${nv.indice + 1}: ainda sem registro`
+      : `Nível ${nv.indice + 1} · ${dataCurta(deISO(ult.data))}: ${fmtVals(id, ult.valores)}`
+        + (pior >= meta ? ' · meta batida' : ` · faltam ${meta - pior}${un} na pior volta`);
+    return `<li><button class="rn-linha${pct >= 100 ? ' cheia' : ''}" data-ex="${id}" title="${dica}" aria-label="${ex.nome}: ${dica}">
+      <span class="rn-nome"><span class="rn-txt">${ex.nome}</span>${subir ? '<span class="selo" title="Hora de subir de nível">⬆ subir</span>' : topo ? '<span class="selo">★ máx.</span>' : ''}</span>
+      <span class="rn-trilho"><span class="rn-barra" style="width:${pct}%"></span><span class="rn-meta"></span></span>
+      <span class="rn-valor">${valor}</span>
+    </button></li>`;
   };
-  const inicioSemana = (s) => {
-    const d = new Date(deISO(est.inicio));
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7) + (s - 1) * 7);
-    return d;
-  };
-  const barras = semanas.map((b, i) => {
-    const x = E + i * faixa + (faixa - larg) / 2;
-    const ini = inicioSemana(b.s);
-    const fim = new Date(ini); fim.setDate(fim.getDate() + 6);
-    const dica = `Semana ${b.s} (${dataCurta(ini)}–${dataCurta(fim)}) · ${b.reps} repetições · ${b.treinos} ${b.treinos === 1 ? 'treino' : 'treinos'}`;
-    const atual = b.s === semanaAtual;
-    return `<g class="g-ponto${atual ? ' atual' : ''}" data-dica="${dica}">
-      <rect class="g-alvo" x="${E + i * faixa}" y="${T}" width="${faixa}" height="${H - T - B}"/>
-      <path class="g-barra" d="${barra(x, y(b.reps), larg)}"/>
-      ${semanas.length <= 12 || i % 2 === 0 ? `<text class="g-eixo" x="${x + larg / 2}" y="${H - 8}" text-anchor="middle">S${b.s}</text>` : ''}
-    </g>`;
-  }).join('');
-  const ultimaBarra = semanas.at(-1);
-  const rotuloUlt = ultimaBarra.reps
-    ? `<text class="g-rotulo g-rotulo-meta" x="${E + (semanas.length - 1) * faixa + faixa / 2}" y="${y(ultimaBarra.reps) - 5}" text-anchor="middle">${ultimaBarra.reps}</text>` : '';
   return `
-    <svg viewBox="0 0 ${W} ${H}" class="g-svg" role="img" aria-label="Repetições por semana do plano">
-      ${grade.join('')}${barras}${rotuloUlt}
-    </svg>
-    <div class="g-dica" hidden></div>`;
+    <p class="nota rn-legenda">Pior volta do último treino no nível atual. Linha tracejada = meta
+      (${metaReps(esforco)} repetições ou ${esforco}s). Toque para ver a evolução.</p>
+    ${['A', 'B', 'C'].map((t) => `
+      <div class="rn-grupo" style="--cor: var(--${t})">
+        <div class="rn-titulo">${TREINOS[t].nome} · ${TREINOS[t].subtitulo}</div>
+        <ul>${TREINOS[t].exercicios.map(linha).join('')}</ul>
+      </div>`).join('')}`;
 }
 
 // ---------- Detalhe com gráfico ----------
