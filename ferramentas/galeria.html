@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Galeria de poses</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body { padding: 12px; }
+    .linha { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 10px; }
+    .linha b { width: 100%; font-size: 13px; }
+    .q { width: calc(33.3% - 4px); aspect-ratio: 200 / 136; background: var(--superficie); border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <p class="nota">Ferramenta de conferência: cada linha mostra as poses-chave de um exercício. Clique numa linha para animar.</p>
+  <div id="g"></div>
+  <script type="module">
+    import { ANIMACOES } from '../js/animacao/poses.js';
+    import { animar } from '../js/animacao/boneco.js';
+    import { EXERCICIOS } from '../js/dados/exercicios.js';
+    const g = document.getElementById('g');
+    const so = new URLSearchParams(location.search).get('ex');
+    for (const [id, def] of Object.entries(ANIMACOES)) {
+      if (so && so !== id) continue;
+      const niveis = def.niveis ?? [def];
+      niveis.forEach((nd, nivel) => {
+        const linha = document.createElement('div');
+        linha.className = 'linha';
+        linha.id = `${id}-${nivel}`;
+        const nome = EXERCICIOS[id]?.niveis?.[nivel];
+        linha.innerHTML = `<b>${id}${nome ? ` · ${nivel}. ${nome}` : ''}</b>`;
+        nd.quadros.forEach((_, i) => {
+          const c = document.createElement('div');
+          c.className = 'q';
+          linha.append(c);
+          animar(c, id, { nivel, quadroFixo: i });
+        });
+        const viva = document.createElement('div');
+        viva.className = 'q';
+        viva.style.outline = '1px solid var(--borda)';
+        linha.append(viva);
+        animar(viva, id, { nivel });
+        g.append(linha);
+      });
+    }
+  </script>
+</body>
+</html>
