@@ -22,9 +22,8 @@ function Invoke-Git {
 function Set-Versao([string]$Arquivo, [string]$Padrao, [string]$Novo) {
     $caminho = Join-Path $PSScriptRoot $Arquivo
     $texto = [IO.File]::ReadAllText($caminho)
-    $novoTexto = [regex]::Replace($texto, $Padrao, $Novo)
-    if ($novoTexto -eq $texto) { throw "Não encontrei a versão dentro de $Arquivo." }
-    [IO.File]::WriteAllText($caminho, $novoTexto, (New-Object Text.UTF8Encoding $false))
+    if (-not [regex]::IsMatch($texto, $Padrao)) { throw "Não encontrei a versão dentro de $Arquivo." }
+    [IO.File]::WriteAllText($caminho, [regex]::Replace($texto, $Padrao, $Novo), (New-Object Text.UTF8Encoding $false))
 }
 
 # 1. Primeira vez: cria o repositório local e liga ao GitHub.
@@ -48,7 +47,7 @@ $faltando = Get-ChildItem (Join-Path $PSScriptRoot 'js') -Recurse -Filter *.js |
 if ($faltando) { throw "Adicione estes arquivos à lista ARQUIVOS do sw.js: $($faltando -join ', ')" }
 
 # 3. Versão nova (o celular percebe a mudança e atualiza sozinho).
-$versao = Get-Date -Format 'yyyy.MM.dd-HHmm'
+$versao = Get-Date -Format 'yyyy.MM.dd-HHmmss'
 Set-Versao 'sw.js' "const VERSAO = '[^']*';" "const VERSAO = '$versao';"
 Set-Versao 'js/versao.js' "VERSAO_APP = '[^']*';" "VERSAO_APP = '$versao';"
 
@@ -56,7 +55,17 @@ Set-Versao 'js/versao.js' "VERSAO_APP = '[^']*';" "VERSAO_APP = '$versao';"
 Invoke-Git add -A
 Invoke-Git commit -m "$Mensagem (versão $versao)"
 Write-Host 'Enviando para o GitHub (na primeira vez abre uma janela para você entrar na sua conta)...'
-Invoke-Git push -u origin main
+git push -u origin main
+if ($LASTEXITCODE -ne 0) {
+    $repo = (git remote get-url origin) -replace '\.git$', ''
+    Write-Host ''
+    Write-Host 'Não deu para enviar ao GitHub. Confira:' -ForegroundColor Yellow
+    Write-Host "  1. O repositório existe? Abra $repo"
+    Write-Host "     Se der 'Page not found', crie em https://github.com/new com o nome '$Repositorio' (Public, sem marcar mais nada)."
+    Write-Host '  2. Você entrou na conta certa na janela de login do GitHub?'
+    Write-Host 'Depois é só rodar o script de novo. Nada foi perdido: a versão já está salva aqui no PC.'
+    exit 1
+}
 
 $dono = ((git remote get-url origin) -replace '^https://github.com/', '' -split '/')[0]
 Write-Host ''
