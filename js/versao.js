@@ -1,2 +1,2 @@
 // Versão do app. O script publicar.ps1 atualiza este valor (e o de sw.js) sozinho a cada publicação.
-export const VERSAO_APP = '2026.11.28-152837';
+export const VERSAO_APP = '2026.11.28-172820';

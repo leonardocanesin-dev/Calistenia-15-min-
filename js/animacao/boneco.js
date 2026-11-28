@@ -49,7 +49,7 @@ function raizes(r) {
 // Converte a descrição de uma pose (com alvos de pé/mão) em ângulos.
 function resolver(p) {
   const r = { q: p.q, t: p.t, h: p.h ?? p.t, c: p.c ?? 0, anc: p.anc ?? 'q',
-    frente: !!p.frente, esc: p.esc ?? null, pa: p.pa == null ? [null, null] : par(p.pa) };
+    frente: !!p.frente, costas: !!p.costas, esc: p.esc ?? null, pa: p.pa == null ? [null, null] : par(p.pa) };
   const R = raizes(r);
   const membros = (alvos, raiz, l1, l2, sentidos, a1s, a2s) => {
     const A = [par(a1s)[0], par(a1s)[1]];
@@ -87,10 +87,20 @@ function esqueleto(r) {
     return [a, j, soma(j, dir(r.la[i], L.LA))];
   };
   return { q: r.q, om: R.om, cab: soma(R.om, dir(r.h, L.N)), t: r.t, h: r.h, c: r.c,
-    frente: r.frente, semPernas: r.esc?.TH === 0, pernas: [perna(0), perna(1)], bracos: [braco(0), braco(1)] };
+    frente: r.frente, costas: r.costas, semPernas: r.esc?.TH === 0, pernas: [perna(0), perna(1)], bracos: [braco(0), braco(1)] };
 }
 
 const ancora = (e, anc) => (anc === 'pe' ? e.pernas[0][2] : anc === 'mao' ? e.bracos[0][2] : e.q);
+
+// Escala de segmentos (escorço) também anda junto entre dois quadros.
+function lerpEsc(a, b, k) {
+  if (!a && !b) return null;
+  const r = {};
+  for (const n of new Set([...Object.keys(a ?? {}), ...Object.keys(b ?? {})])) {
+    r[n] = lerp(a?.[n] ?? 1, b?.[n] ?? 1, k);
+  }
+  return r;
+}
 
 // Pose intermediária: interpola ângulos e mantém o ponto de apoio no lugar.
 function interpolar(A, B, k) {
@@ -99,7 +109,7 @@ function interpolar(A, B, k) {
   const pb = ancora(esqueleto(B), anc);
   const m = (campo) => [0, 1].map((i) => lerpAng(A[campo][i], B[campo][i], k));
   const r = { q: [0, 0], t: lerpAng(A.t, B.t, k), h: lerpAng(A.h, B.h, k), c: lerp(A.c, B.c, k),
-    frente: A.frente, esc: A.esc, pa: k < 0.5 ? A.pa : B.pa,
+    frente: A.frente, costas: A.costas, esc: lerpEsc(A.esc, B.esc, k), pa: k < 0.5 ? A.pa : B.pa,
     th: m('th'), sh: m('sh'), ua: m('ua'), la: m('la') };
   const p = ancora(esqueleto(r), anc);
   r.q = [lerp(pa[0], pb[0], k) - p[0], lerp(pa[1], pb[1], k) - p[1]];
@@ -165,6 +175,7 @@ function desenhar(els, e) {
   const pele = e.frente ? soma(e.cab, dir(e.h, -1.8)) : soma(soma(e.cab, dir(face, 1.8)), dir(e.h, -1.6));
   els.cabelo.setAttribute('cx', f1(e.cab[0]));
   els.cabelo.setAttribute('cy', f1(e.cab[1]));
+  els.rosto.setAttribute('visibility', e.costas ? 'hidden' : 'visible');
   els.rosto.setAttribute('cx', f1(pele[0]));
   els.rosto.setAttribute('cy', f1(pele[1]));
   const olhos = e.frente
@@ -172,7 +183,7 @@ function desenhar(els, e) {
     : [soma(soma(pele, dir(face, 4)), dir(e.h, 1.2)), null];
   olhos.forEach((p, i) => {
     const o = els['olho' + i];
-    o.setAttribute('visibility', p ? 'visible' : 'hidden');
+    o.setAttribute('visibility', p && !e.costas ? 'visible' : 'hidden');
     if (p) { o.setAttribute('cx', f1(p[0])); o.setAttribute('cy', f1(p[1])); }
   });
   els.longe.setAttribute('class', e.frente ? 'longe frente' : 'longe');

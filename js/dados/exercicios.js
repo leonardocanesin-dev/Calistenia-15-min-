@@ -191,71 +191,66 @@ export const EXERCICIOS = {
   },
 
   // ---------- Movimentação e Flexibilidade (opcional) ----------
-  mob_cocoras_balanco: {
-    nome: 'Cócoras com balanço',
+  mob_barriga_projetada: {
+    nome: 'Barriga projetada',
     como: [
-      'Agache bem fundo, pés inteiros no chão, e apoie as mãos no chão à frente.',
-      'Leve o peso devagar para as mãos, deixando os joelhos irem à frente.',
-      'Volte o peso para os pés e sente fundo de novo. Respire solto.',
+      'Comece sentado, joelhos dobrados, pés no chão e mãos apoiadas no chão atrás do corpo.',
+      'Passe para os joelhos, com as mãos ainda atrás, e empurre o quadril para a frente e para cima.',
+      'Abra o peito, solte a cabeça para trás e segure um pouco. Volte devagar e repita.',
     ],
-    erros: ['Tirar os calcanhares do chão', 'Fazer rápido, com tranco'],
+    erros: ['Dobrar na lombar em vez de empurrar o quadril', 'Encolher os ombros perto das orelhas'],
   },
-  mob_afastada: {
-    nome: 'Flexão à frente, pernas afastadas',
+
+  mob_posterior: {
+    nome: 'Alongamento do posterior',
     como: [
-      'Em pé, pernas bem afastadas e pontas dos pés para a frente.',
-      'Dobre o quadril (não a lombar) e desça o tronco entre as pernas.',
-      'Apoie as mãos no chão e solte a cabeça. A cada expiração, desça um pouco mais.',
+      'Em pé, pernas bem abertas, pontas dos pés para a frente e joelhos esticados.',
+      'Dobre o quadril e deixe o tronco cair entre as pernas, segurando os cotovelos.',
+      'Suba e desça o tronco devagar, sem tranco. A cada descida, deixe a cabeça ir um pouco mais perto do chão.',
     ],
-    erros: ['Travar os joelhos com força', 'Forçar com balanço'],
+    erros: ['Dobrar os joelhos para chegar mais baixo', 'Descer com balanço forte'],
   },
-  mob_mesa_invertida: {
-    nome: 'Mesa invertida',
+
+  mob_core: {
+    nome: 'Fortalecimento do core',
     como: [
-      'Sentado, joelhos dobrados, pés no chão e mãos no chão atrás do quadril.',
-      'Empurre o chão e suba o quadril até o tronco ficar reto como uma mesa.',
-      'Abra o peito, segure 1 segundo no alto e desça devagar.',
+      'Sentado, pernas quase esticadas à frente e mãos no chão atrás do quadril, dedos para a frente.',
+      'Empurre o chão, dobre os joelhos e suba o quadril até o tronco ficar reto como uma mesa.',
+      'Segure 1 segundo com o abdômen e o bumbum firmes e desça devagar até sentar.',
     ],
-    erros: ['Encolher os ombros perto das orelhas', 'Deixar o quadril cair no alto'],
+    erros: ['Deixar o quadril cair no alto', 'Encolher os ombros perto das orelhas'],
   },
-  mob_90_90: {
-    nome: 'Sentado 90/90, braços acima',
+
+  mob_pelvica: {
+    nome: 'Postura pélvica',
     ladoALado: true,
-    trocaTexto: 'Troque a perna da frente!',
+    trocaTexto: 'Troque a perna!',
     como: [
-      'Sentado no chão: perna da frente dobrada a 90° na frente, a de trás dobrada a 90° atrás.',
-      'Estique os braços acima da cabeça e cresça a coluna.',
-      'Incline o tronco devagar sobre a perna da frente e volte. Troque de lado na metade.',
+      'Sentado de pernas cruzadas, coluna alta, braços esticados acima da cabeça com as mãos juntas.',
+      'Sem mexer o tronco e os braços, gire uma perna para trás, deixando o joelho dobrado ao lado do corpo.',
+      'Volte a perna para a frente e repita. Na metade do tempo, troque de perna.',
     ],
-    erros: ['Arredondar as costas', 'Prender a respiração'],
+    erros: ['Inclinar o tronco para o lado junto com a perna', 'Deixar os braços caírem'],
   },
-  mob_agulha: {
-    nome: 'Passa a agulha (rotação torácica)',
-    ladoALado: true,
+
+  mob_toracico: {
+    nome: 'Alongamento torácico',
     como: [
-      'De quatro apoios, mãos embaixo dos ombros e joelhos embaixo do quadril.',
-      'Abra um braço para o teto, girando o peito e olhando para a mão.',
-      'Depois passe esse braço por baixo do outro, encostando o ombro no chão. Troque de lado na metade.',
+      'Joelhos no chão, tronco abaixado e cotovelos apoiados no chão, com as duas mãos segurando a nuca.',
+      'Gire o tronco e leve um cotovelo para o teto, mantendo as mãos na nuca e o quadril parado.',
+      'Volte com o cotovelo ao chão e faça para o outro lado. Vá alternando, um de cada vez.',
     ],
-    erros: ['Girar o quadril junto', 'Fazer rápido'],
+    erros: ['Puxar o pescoço com as mãos', 'Mexer o quadril junto com o giro'],
   },
-  mob_sapo: {
-    nome: 'Sapo com braços à frente',
+
+  mob_corcunda: {
+    nome: 'Corcunda',
     como: [
-      'Joelhos no chão bem afastados, antebraços ou mãos no chão à frente.',
-      'Leve o quadril para trás devagar, com o peito perto do chão e os braços esticados.',
-      'Volte um pouco à frente e repita, sentindo a parte de dentro das coxas.',
+      'Joelhos no chão e mãos no chão bem afastadas, mais abertas que os ombros.',
+      'Dobre um braço e desça o ombro do outro lado até perto do chão, com esse braço esticado.',
+      'Volte ao centro e faça para o outro lado. Vá alternando, devagar.',
     ],
-    erros: ['Forçar a abertura dos joelhos até doer', 'Afundar a lombar'],
-  },
-  mob_cocoras: {
-    nome: 'Cócoras profunda (segurar)',
-    como: [
-      'Agache o mais fundo que conseguir, pés inteiros no chão.',
-      'Cotovelos por dentro dos joelhos, mãos juntas, peito aberto.',
-      'Fique parado respirando fundo. Se o calcanhar sobe, afaste mais os pés.',
-    ],
-    erros: ['Calcanhar saindo do chão', 'Costas muito arredondadas'],
+    erros: ['Fazer rápido, com tranco', 'Prender a respiração'],
   },
 
   // ---------- Descanso ----------

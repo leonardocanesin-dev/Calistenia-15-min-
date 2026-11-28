@@ -10,7 +10,7 @@ export const ALONGAMENTO = { exercicios: ['along_pernas', 'along_peito', 'along_
 // Opcional, oferecido ao fim de cada treino (não muda nenhum treino).
 export const MOBILIDADE = {
   nome: 'Movimentação e Flexibilidade',
-  exercicios: ['mob_cocoras_balanco', 'mob_afastada', 'mob_mesa_invertida', 'mob_90_90', 'mob_agulha', 'mob_sapo', 'mob_cocoras'],
+  exercicios: ['mob_barriga_projetada', 'mob_posterior', 'mob_core', 'mob_pelvica', 'mob_toracico', 'mob_corcunda'],
   dur: 40,
 };
 export const VOLTAS = 3;

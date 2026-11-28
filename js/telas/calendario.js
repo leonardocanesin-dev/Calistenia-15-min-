@@ -1,6 +1,6 @@
 import { TREINOS } from '../dados/treinos.js';
 import { getEstado, atualizar } from '../storage.js';
-import { treinoDoDia, treinoSemTroca, trocarTreino, statusDoDia, sequencias, resumoMes, anoFinal, fimDoPlano } from '../plano.js';
+import { treinoDoDia, treinoSemTroca, trocarTreino, proximoDaOrdem, statusDoDia, sequencias, resumoMes, anoFinal, fimDoPlano } from '../plano.js';
 import { hoje, iso, deISO, dataLonga } from '../datas.js';
 import { desbloquearSom } from '../som.js';
 import { abrirTimer } from './timer.js';
@@ -81,7 +81,7 @@ export function telaCalendario(main) {
 
     <section class="card">
       <h2>Plano até 31/12/${anoFinal(est)}</h2>
-      <p class="nota">Início em ${dataLonga(ini)}. Os treinos seguem a ordem das semanas ímpares e pares. Trocou um dia por descanso ou por outro treino? O treino adiado vai para o dia seguinte e os outros andam junto (domingo é sempre descanso).</p>
+      <p class="nota">Início em ${dataLonga(ini)}. Os treinos seguem a ordem das semanas ímpares e pares. Trocou um dia por descanso ou por outro treino? O treino adiado vai para o dia seguinte e os outros andam junto (domingo é descanso e só muda se você trocar à mão).</p>
       <button class="btn secundario" data-acao="estender">+ Estender até 31/12/${anoFinal(est) + 1}</button>
     </section>`;
 
@@ -113,7 +113,7 @@ export function abrirDia(diaISO, aoMudar) {
   const ehHoje = diaISO === iso(hoje());
   const regs = registrosDoDia(est, diaISO);
   const domingo = d.getDay() === 0;
-  const podeTrocar = !domingo && d >= hoje() && st !== 'feito';
+  const podeTrocar = d >= hoje() && st !== 'feito';
   const original = treinoSemTroca(d, est);
   const trocado = !!est.trocas?.[diaISO];
 
@@ -129,7 +129,7 @@ export function abrirDia(diaISO, aoMudar) {
       <div class="opcoes">
         <button class="op ok ${st === 'feito' ? 'sel' : ''}" data-st="feito" ${futuro ? 'disabled' : ''}>✔ Feito</button>
         <button class="op ruim ${st === 'pulado' ? 'sel' : ''}" data-st="pulado" ${futuro ? 'disabled' : ''}>✖ Pulado</button>
-        ${plan !== 'D' ? `<button class="op ${st === 'descanso' ? 'sel' : ''}" data-st="descanso">☾ Trocar por descanso</button>` : ''}
+        ${plan !== 'D' && !domingo ? `<button class="op ${st === 'descanso' ? 'sel' : ''}" data-st="descanso">☾ Trocar por descanso</button>` : ''}
         ${st ? `<button class="op" data-st="limpar">↺ Limpar</button>` : ''}
       </div>
       ${futuro ? '<p class="nota">Dias futuros só podem ser trocados por descanso ou por outro treino.</p>' : ''}
@@ -139,7 +139,9 @@ export function abrirDia(diaISO, aoMudar) {
           <button class="op ${plan === t && st !== 'descanso' ? 'sel' : ''}" data-trocar="${t}" style="--cor: var(--${t})"
             aria-label="Trocar para ${TREINOS[t].nome}"><strong>${t}</strong><small>${t === 'D' ? 'Descanso' : TREINOS[t].subtitulo.split(' + ')[0]}</small></button>`).join('')}
         </div>
-        <p class="nota">${trocado ? `Trocado à mão (o plano era ${TREINOS[original].nome}). ` : ''}O treino que sair deste dia passa para o próximo, e os seguintes andam junto. Domingo continua descanso.</p>
+        <p class="nota">${trocado ? `Trocado à mão (o plano era ${TREINOS[original].nome}). ` : ''}${domingo
+          ? `Escolha ${proximoDaOrdem(est, diaISO)} (o próximo da ordem) para adiantá-lo para este domingo: os treinos seguintes andam um dia para trás, mantendo a ordem. Outro treino não muda os dias seguintes. Os outros domingos continuam descanso.`
+          : 'O treino que sair deste dia passa para o próximo, e os seguintes andam junto. Domingo continua descanso.'}</p>
         ${trocado ? `<button class="btn" data-trocar="${original}">↺ Voltar ao plano (${TREINOS[original].nome})</button>` : ''}` : ''}
       ${regs.length ? `
         <p class="nota">Repetições registradas neste dia: ${regs.length === 1 ? '1 treino' : `${regs.length} treinos`} (${regs.reduce((s, r) => s + totalReps(r), 0)} reps).</p>

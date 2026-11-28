@@ -6,6 +6,7 @@
 //         th/sh = coxa/canela · ua/la = braço/antebraço (ângulos diretos)
 //         jd / cd = sentido de dobra do joelho / cotovelo · pa = ângulo do pé
 //         anc = ponto que fica parado ('pe', 'mao' ou 'q') · frente = vista de frente
+//         costas = cabeça vista por trás (só cabelo, sem rosto)
 //         esc = escala de segmentos (escorço) · ms = transição · pausa = tempo parado
 export const CHAO = 134;
 const G = CHAO;
@@ -41,6 +42,14 @@ const PRANCHA_JOELHOS = { q: [100.7, 124.1], t: 109.1, h: 112, th: -70.9, sh: -1
 const FLEXAO_ALTA = { q: [110, 112], t: 118, h: 112, pe: [68, G], mao: [140, G], anc: 'mao' };
 const FLEXAO_BAIXA = { q: [116, 130], t: 94, h: 100, pe: [68, G], mao: [140, G], anc: 'mao' };
 const AGACH_BAIXO = { q: [84, 108], t: 145, h: 150, pe: [100, G], ua: 90, la: 90, anc: 'pe' };
+
+// Alongamento torácico (vista de frente): de joelhos, cotovelos no chão, mãos na nuca.
+const TORAC = { q: [100, 100], t: 0, h: 0, frente: true, costas: true, esc: { T: 0.45, SH: 0.25 },
+  th: [-16, 16], sh: [0, 0], ua: [-30, 30], la: [116, -116] };
+
+// Corcunda (vista de frente): de joelhos, mãos bem afastadas no chão.
+const CORC = { q: [100, 118], t: 180, h: 180, frente: true, costas: true, esc: { T: 0.25, SH: 0.2 },
+  pe: [[119, G], [81, G]], jd: [-1, 1], mao: [[136, G], [64, G]], cd: [1, -1] };
 
 // Burpee (mãos em x=122).
 const B_PE = { q: [100, 86.3], t: 180, pe: [100, G], ...BRACOS_SOLTOS };
@@ -325,46 +334,44 @@ export const ANIMACOES = {
   ] },
 
   // ================ Movimentação e Flexibilidade ================
-  // Cócoras funda, mãos no chão à frente; o peso vai para as mãos e volta.
-  mob_cocoras_balanco: { quadros: [
-    { q: [92, 125], t: 140, h: 150, pe: [102, G], mao: [126, G], anc: 'pe', ms: 1300, pausa: 400 },
-    { q: [104, 114], t: 118, h: 112, pe: [102, G], mao: [128, G], anc: 'pe', ms: 1300, pausa: 600 },
+  // Sentado com mãos atrás → de joelhos, quadril projetado à frente e para cima, peito aberto.
+  mob_barriga_projetada: { quadros: [
+    { q: [94, 126], t: -150, h: -165, pe: [124, G], jd: 1, mao: [76, G], cd: 1, anc: 'mao', ms: 1600, pausa: 500 },
+    { q: [118, 111], t: -112, h: -170, c: -10, th: 15, sh: -90, pa: -90, mao: [76, G], cd: 1, anc: 'mao', ms: 1600, pausa: 1200 },
   ] },
 
-  // Vista de frente: pernas bem afastadas, tronco pendurado entre elas, mãos no chão.
-  mob_afastada: { quadros: [
-    { q: [100, 90], t: 0, h: 0, frente: true, esc: { T: 0.55 }, pe: [[76, G], [124, G]], mao: [[86, G], [114, G]], anc: 'pe', ms: 1800, pausa: 600 },
-    { q: [100, 91], t: 0, h: 0, frente: true, esc: { T: 0.68 }, pe: [[76, G], [124, G]], mao: [[80, 126], [120, 126]], anc: 'pe', ms: 1800, pausa: 1200 },
+  // Vista de frente: pernas abertas, tronco pendurado segurando os cotovelos; sobe e desce.
+  mob_posterior: { quadros: [
+    { q: [100, 93], t: 0, h: 0, frente: true, esc: { T: 0.3 }, pe: [[70, G], [130, G]], mao: [[111, 124], [89, 124]], cd: [-1, 1], anc: 'pe', ms: 1100, pausa: 200 },
+    { q: [100, 94], t: 0, h: 0, frente: true, esc: { T: 0.45 }, pe: [[70, G], [130, G]], mao: [[111, 129], [89, 129]], cd: [-1, 1], anc: 'pe', ms: 1100, pausa: 400 },
   ] },
 
-  // Sentado com mãos atrás → sobe o quadril até a "mesa".
-  mob_mesa_invertida: { quadros: [
-    { q: [94, 126], t: -150, h: -165, pe: [124, G], jd: 1, mao: [72, G], cd: 1, anc: 'pe', ms: 1000, pausa: 300 },
-    { q: [98, 108], t: -92, h: -120, pe: [124, G], jd: -1, mao: [70, G], cd: 1, anc: 'pe', ms: 1000, pausa: 900 },
+  // Sentado, pernas à frente e mãos atrás → sobe até a mesa invertida.
+  mob_core: { quadros: [
+    { q: [100, 128], t: -155, h: 175, pe: [148, G], jd: 1, mao: [80, G], cd: 1, anc: 'mao', ms: 1100, pausa: 400 },
+    { q: [116, 100], t: -95, h: -165, pe: [140, G], jd: 1, mao: [80, G], cd: 1, anc: 'mao', ms: 1100, pausa: 900 },
   ] },
 
-  // Sentado 90/90, braços acima; inclina o tronco sobre a perna da frente e volta.
-  mob_90_90: { quadros: [
-    { q: [98, 126], t: 180, h: 180, th: [92, -88], sh: [-60, 60], pa: [0, 0], ua: [162, 166], la: [172, 176], ms: 1400, pausa: 600 },
-    { q: [98, 126], t: 142, h: 140, th: [92, -88], sh: [-60, 60], pa: [0, 0], ua: [142, 146], la: [146, 150], ms: 1400, pausa: 900 },
+  // Vista de frente: sentado de pernas cruzadas, mãos juntas no alto; só uma perna gira para trás.
+  mob_pelvica: { quadros: [
+    { q: [100, 122], t: 180, h: 180, frente: true, th: [75, -75], sh: [-98, 98], mao: [[100, 55], [100, 55]], cd: [-1, 1], ms: 1200, pausa: 500 },
+    { q: [100, 122], t: 180, h: 180, frente: true, th: [82, -75], sh: [55, 98], mao: [[100, 55], [100, 55]], cd: [-1, 1], ms: 1200, pausa: 700 },
   ] },
 
-  // Quatro apoios: abre o braço para o teto, depois passa por baixo do corpo.
-  mob_agulha: { quadros: [
-    { q: [80, 108], t: 112, h: 150, th: 0, sh: -90, pa: -90, ua: [178, 0], la: [178, 0], mao: [null, [112, G]], ms: 1300, pausa: 500 },
-    { q: [80, 110], t: 100, h: 60, c: 4, th: 0, sh: -90, pa: -90, ua: [-30, 0], la: [-70, 0], mao: [null, [112, G]], ms: 1300, pausa: 700 },
+  // Vista de frente: de joelhos, cotovelos no chão e mãos na nuca; um cotovelo sobe de cada vez.
+  mob_toracico: { quadros: [
+    { ...TORAC, ms: 1000, pausa: 300 },
+    { ...TORAC, t: 3, h: -12, ua: [-30, 160], la: [116, -30], ms: 1000, pausa: 700 },
+    { ...TORAC, ms: 1000, pausa: 300 },
+    { ...TORAC, t: -3, h: 12, ua: [-160, 30], la: [30, -116], ms: 1000, pausa: 700 },
   ] },
 
-  // Joelhos no chão, braços esticados à frente; o quadril vai para trás e volta.
-  mob_sapo: { quadros: [
-    { q: [80, 106], t: 75, h: 80, th: 0, sh: -90, pa: -90, mao: [146, G], anc: 'pe', ms: 1500, pausa: 400 },
-    { q: [66, 118], t: 85, h: 88, th: 49, sh: -90, pa: -90, mao: [136, G], anc: 'pe', ms: 1500, pausa: 900 },
-  ] },
-
-  // Cócoras funda parada, cotovelos por dentro dos joelhos, respirando.
-  mob_cocoras: { quadros: [
-    { q: [94, 124], t: 165, h: 175, pe: [102, G], mao: [114, 102], cd: 1, ms: 1800 },
-    { q: [94, 123], t: 169, h: 178, pe: [102, G], mao: [115, 100], cd: 1, ms: 1800 },
+  // Vista de frente: de joelhos, mãos bem afastadas; desce um ombro de cada vez dobrando o outro braço.
+  mob_corcunda: { quadros: [
+    { ...CORC, ms: 1100, pausa: 300 },
+    { ...CORC, q: [104, 112], t: -155, h: 60, esc: { T: -0.3, SH: 0.2 }, ms: 1100, pausa: 800 },
+    { ...CORC, ms: 1100, pausa: 300 },
+    { ...CORC, q: [96, 112], t: 155, h: -60, esc: { T: -0.3, SH: 0.2 }, ms: 1100, pausa: 800 },
   ] },
 
   // ======================= Descanso =======================
