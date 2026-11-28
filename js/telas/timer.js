@@ -1,9 +1,9 @@
 // Timer guiado em tela cheia.
 import { EXERCICIOS, nivelAtual } from '../dados/exercicios.js';
-import { TREINOS, VOLTAS, AQUECIMENTO, ALONGAMENTO } from '../dados/treinos.js';
+import { TREINOS, VOLTAS, AQUECIMENTO, ALONGAMENTO, MOBILIDADE } from '../dados/treinos.js';
 import { getEstado, atualizar } from '../storage.js';
-import { semanaDoPlano, tempos } from '../plano.js';
-import { ultimoValor, sugestao, subirNivel, dispensar, SESSOES_PARA_SUBIR } from '../registros.js';
+import { semanaDoPlano, tempos, treinoDoDia, trocarTreino } from '../plano.js';
+import { ultimoValor, sugestao, subirNivel, dispensar, SESSOES_PARA_SUBIR, registrarMobilidade, textoUltimaMobilidade } from '../registros.js';
 import { hoje, iso, mmss } from '../datas.js';
 import { montarEtapas, Sessao } from '../timer.js';
 import { manterTelaAcesa, liberarTela } from '../telaAcesa.js';
@@ -25,12 +25,18 @@ const FASES = {
   pausa: 'PAUSA',
   alongamento: 'ALONGAMENTO',
   descanso: 'DESCANSO ATIVO',
+  escolha: 'ESCOLHA O NÍVEL',
+  mobilidade: 'MOBILIDADE',
 };
+
+// Fases em que dá para escolher o nível do exercício que vem a seguir.
+const ESCOLHE_NIVEL = new Set(['pausa', 'escolha']);
 
 export function abrirTimer(treinoId, { aoFechar } = {}) {
   const semana = semanaDoPlano(hoje(), getEstado().inicio);
   const etapas = montarEtapas(treinoId, semana);
-  const treino = TREINOS[treinoId];
+  const ehMob = treinoId === 'M';
+  const treino = ehMob ? { nome: MOBILIDADE.nome, exercicios: [] } : TREINOS[treinoId];
 
   const el = document.createElement('div');
   el.className = 'timer';
@@ -78,6 +84,8 @@ export function abrirTimer(treinoId, { aoFechar } = {}) {
     if (et.fase === 'esforco' || et.fase === 'pausa') return `${treino.nome} · Volta ${et.volta}/${VOLTAS}`;
     if (et.fase === 'aquecimento') return `Aquecimento ${AQUECIMENTO.exercicios.indexOf(et.exId) + 1}/${AQUECIMENTO.exercicios.length}`;
     if (et.fase === 'alongamento') return `Alongamento ${ALONGAMENTO.exercicios.indexOf(et.exId) + 1}/${ALONGAMENTO.exercicios.length}`;
+    if (et.fase === 'mobilidade') return `Mobilidade ${MOBILIDADE.exercicios.indexOf(et.exId) + 1}/${MOBILIDADE.exercicios.length}`;
+    if (et.fase === 'escolha') return `${treino.nome} · antes da volta 1`;
     return treino.nome;
   }
 
@@ -94,16 +102,45 @@ export function abrirTimer(treinoId, { aoFechar } = {}) {
     el.className = `timer fase-${et.fase}`;
     $('.local').textContent = local(et);
     $('.fase').textContent = FASES[et.fase];
-    $('.rotulo-ex').textContent = et.fase === 'pausa' || et.fase === 'preparar' ? 'A seguir' : '';
+    const aSeguir = et.fase === 'pausa' || et.fase === 'preparar' || et.fase === 'escolha';
+    $('.rotulo-ex').textContent = aSeguir ? 'A seguir' : '';
     $('.nome').textContent = ex.nome;
-    const nv = nivelAtual(et.exId, getEstado().niveis);
-    $('.nivel-atual').textContent = nv ? nv.nome + (ex.isometria ? ' · segure' : '') : '';
-    pararAnim();
-    pararAnim = animar($('.area-anim'), et.exId, { nivel: nv?.indice });
+    desenharNivel(et);
     $('.troca').textContent = '';
-    const prox = et.fase === 'pausa' || et.fase === 'preparar' ? null : proximoDepois(s.i);
+    const prox = aSeguir ? null : proximoDepois(s.i);
     $('.proximo').innerHTML = prox ? `Próximo: <strong>${EXERCICIOS[prox.exId].nome}</strong>` : '';
     desenharRegistro(et);
+  }
+
+  // Nível do exercício mostrado. Na pausa e na etapa de escolha vira um seletor ‹ ›
+  // (o nível escolhido fica salvo, igual a trocar na tela do exercício).
+  function desenharNivel(et) {
+    const ex = EXERCICIOS[et.exId];
+    const nv = nivelAtual(et.exId, getEstado().niveis);
+    const caixa = $('.nivel-atual');
+    if (nv && ESCOLHE_NIVEL.has(et.fase)) {
+      caixa.innerHTML = `
+        <div class="nivel-sel">
+          <button data-nivel="-1" ${nv.indice === 0 ? 'disabled' : ''} aria-label="Nível mais fácil">‹</button>
+          <span><small>Nível ${nv.indice + 1}/${nv.total}</small>${nv.nome}${ex.isometria ? ' · segure' : ''}</span>
+          <button data-nivel="1" ${nv.indice === nv.total - 1 ? 'disabled' : ''} aria-label="Nível mais difícil">›</button>
+        </div>`;
+    } else {
+      caixa.textContent = nv ? nv.nome + (ex.isometria ? ' · segure' : '') : '';
+    }
+    pararAnim();
+    pararAnim = animar($('.area-anim'), et.exId, { nivel: nv?.indice });
+  }
+
+  function mudarNivel(direcao) {
+    const et = sessao.etapa;
+    if (!ESCOLHE_NIVEL.has(et.fase)) return;
+    const nv = nivelAtual(et.exId, getEstado().niveis);
+    if (!nv) return;
+    const novo = Math.max(0, Math.min(nv.total - 1, nv.indice + direcao));
+    if (novo === nv.indice) return;
+    atualizar((st) => { st.niveis[et.exId] = novo; });
+    desenharNivel(et);
   }
 
   // Painel da pausa: quantas repetições fez no exercício que acabou.
@@ -114,6 +151,7 @@ export function abrirTimer(treinoId, { aoFechar } = {}) {
     const isoEx = !!exF.isometria;
     const i = et.voltaFeita - 1;
     const s = (series[et.feito] ??= { nivel: nivelAtual(et.feito, getEstado().niveis)?.indice ?? 0, valores: [], confirmado: [] });
+    s.nivel = nivelAtual(et.feito, getEstado().niveis)?.indice ?? s.nivel; // nível em que fez esta volta
     if (s.valores[i] == null) {
       const anterior = s.valores[i - 1] ?? ultimoValor(getEstado(), et.feito);
       s.valores[i] = isoEx ? Math.min(anterior ?? et.esforco, et.esforco) : (anterior ?? 10);
@@ -176,7 +214,27 @@ export function abrirTimer(treinoId, { aoFechar } = {}) {
   function concluir() {
     pararAnim();
     liberarTela();
-    atualizar((st) => { st.dias[iso(hoje())] = { status: 'feito', treino: treinoId }; });
+    if (ehMob) {
+      atualizar(registrarMobilidade);
+      el.className = 'timer fase-mobilidade concluido-tela';
+      el.innerHTML = `
+        <div class="concluido">
+          <div class="grande">🧘</div>
+          <h1>Mobilidade concluída!</h1>
+          <p class="nota">${MOBILIDADE.nome} · ${mmss(total)} · registrada hoje</p>
+          <button class="btn principal" data-acao="fechar">Fechar</button>
+        </div>`;
+      return;
+    }
+    atualizar((st) => {
+      const dia = iso(hoje());
+      // Fez outro treino no lugar do previsto: vira troca, e o previsto passa para o próximo dia.
+      const previsto = treinoDoDia(hoje(), st);
+      if (previsto && previsto !== treinoId && hoje().getDay() !== 0 && st.dias[dia]?.status !== 'feito') {
+        trocarTreino(st, dia, treinoId);
+      }
+      st.dias[dia] = { status: 'feito', treino: treinoId };
+    });
     const feitos = salvarSessao();
     el.className = 'timer fase-esforco concluido-tela';
     desenharConclusao(feitos);
@@ -205,7 +263,13 @@ export function abrirTimer(treinoId, { aoFechar } = {}) {
               <button class="btn" data-dispensar="${s.exId}">Agora não</button>
             </div>
           </div>`).join('')}
-        <button class="btn ${sugestoes.length ? '' : 'principal'}" data-acao="fechar">Fechar</button>
+        <div class="oferta-mob">
+          <span class="etiqueta">Opcional · ~${Math.round((MOBILIDADE.exercicios.length * MOBILIDADE.dur) / 60)} min</span>
+          <strong>${MOBILIDADE.nome}</strong>
+          <small>${textoUltimaMobilidade(est)}</small>
+          <button class="btn principal" data-acao="mobilidade">▶ Fazer agora</button>
+        </div>
+        <button class="btn" data-acao="fechar">Agora não, fechar</button>
       </div>`;
   }
 
@@ -235,12 +299,16 @@ export function abrirTimer(treinoId, { aoFechar } = {}) {
     if (rodava) sessao.iniciar();
   }
 
-  function fechar(veioDoPop = false) {
+  // `depois` roda quando o histórico já voltou (para abrir outro timer sem confundir o botão voltar).
+  function fechar(veioDoPop = false, depois = null) {
     sessao.parar();
-    salvarSessao(); // saindo no meio: guarda o que já foi registrado
+    if (!ehMob) salvarSessao(); // saindo no meio: guarda o que já foi registrado
     liberarTela();
     window.removeEventListener('popstate', aoPop);
-    if (!veioDoPop) { ignorarPop = true; history.back(); }
+    if (!veioDoPop) {
+      if (depois) window.addEventListener('popstate', () => depois(), { once: true });
+      history.back();
+    } else depois?.();
     el.remove();
     document.body.classList.remove('em-treino');
     aoFechar?.();
@@ -249,6 +317,8 @@ export function abrirTimer(treinoId, { aoFechar } = {}) {
   el.addEventListener('click', (e) => {
     const reg = e.target.closest('[data-reg]')?.dataset.reg;
     if (reg) return ajustarRegistro(Number(reg));
+    const nivel = e.target.closest('[data-nivel]')?.dataset.nivel;
+    if (nivel) return mudarNivel(Number(nivel));
     const subir = e.target.closest('[data-subir]')?.dataset.subir;
     const dispensa = e.target.closest('[data-dispensar]')?.dataset.dispensar;
     if (subir || dispensa) {
@@ -269,6 +339,7 @@ export function abrirTimer(treinoId, { aoFechar } = {}) {
     else if (acao === 'voltar') sessao.anterior();
     else if (acao === 'detalhe') abrirExercicio(sessao.etapa.exId);
     else if (acao === 'fechar') fechar();
+    else if (acao === 'mobilidade') fechar(false, () => abrirTimer('M', { aoFechar }));
     else if (acao === 'sair') pedirSaida();
   });
 

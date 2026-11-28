@@ -1,4 +1,5 @@
-import { TREINOS, AQUECIMENTO, ALONGAMENTO } from '../dados/treinos.js';
+import { TREINOS, AQUECIMENTO, ALONGAMENTO, MOBILIDADE } from '../dados/treinos.js';
+import { textoUltimaMobilidade } from '../registros.js';
 import { EXERCICIOS, nivelAtual } from '../dados/exercicios.js';
 import { getEstado } from '../storage.js';
 import { semanaDoPlano, treinoDoDia, tempos, sequencias, resumoMes, anoFinal } from '../plano.js';
@@ -74,6 +75,13 @@ export function telaHoje(main) {
     <section class="card" style="--cor: var(--alongamento)">
       <h2>Alongamento · 1 min</h2>
       ${listaExercicios(ALONGAMENTO.exercicios, est.niveis)}
+    </section>
+    <h2 class="secao">Opcional</h2>
+    <section class="card" style="--cor: var(--mobilidade)">
+      <h2>${MOBILIDADE.nome} · ~${Math.round((MOBILIDADE.exercicios.length * MOBILIDADE.dur) / 60)} min</h2>
+      <p class="sub">Oferecido no fim de cada treino · ${textoUltimaMobilidade(est)}</p>
+      ${listaExercicios(MOBILIDADE.exercicios, est.niveis)}
+      <button class="btn secundario" data-iniciar="M">▶ Iniciar ${MOBILIDADE.nome}</button>
     </section>`;
 
   main.onclick = (e) => {

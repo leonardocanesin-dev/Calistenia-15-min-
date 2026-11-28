@@ -324,6 +324,49 @@ export const ANIMACOES = {
     { q: [100, 86.3], t: 180, frente: true, th: [3, -3], sh: 0, ua: [25, 85], la: [100, 85], ms: 600, pausa: 2400 },
   ] },
 
+  // ================ Movimentação e Flexibilidade ================
+  // Cócoras funda, mãos no chão à frente; o peso vai para as mãos e volta.
+  mob_cocoras_balanco: { quadros: [
+    { q: [92, 125], t: 140, h: 150, pe: [102, G], mao: [126, G], anc: 'pe', ms: 1300, pausa: 400 },
+    { q: [104, 114], t: 118, h: 112, pe: [102, G], mao: [128, G], anc: 'pe', ms: 1300, pausa: 600 },
+  ] },
+
+  // Vista de frente: pernas bem afastadas, tronco pendurado entre elas, mãos no chão.
+  mob_afastada: { quadros: [
+    { q: [100, 90], t: 0, h: 0, frente: true, esc: { T: 0.55 }, pe: [[76, G], [124, G]], mao: [[86, G], [114, G]], anc: 'pe', ms: 1800, pausa: 600 },
+    { q: [100, 91], t: 0, h: 0, frente: true, esc: { T: 0.68 }, pe: [[76, G], [124, G]], mao: [[80, 126], [120, 126]], anc: 'pe', ms: 1800, pausa: 1200 },
+  ] },
+
+  // Sentado com mãos atrás → sobe o quadril até a "mesa".
+  mob_mesa_invertida: { quadros: [
+    { q: [94, 126], t: -150, h: -165, pe: [124, G], jd: 1, mao: [72, G], cd: 1, anc: 'pe', ms: 1000, pausa: 300 },
+    { q: [98, 108], t: -92, h: -120, pe: [124, G], jd: -1, mao: [70, G], cd: 1, anc: 'pe', ms: 1000, pausa: 900 },
+  ] },
+
+  // Sentado 90/90, braços acima; inclina o tronco sobre a perna da frente e volta.
+  mob_90_90: { quadros: [
+    { q: [98, 126], t: 180, h: 180, th: [92, -88], sh: [-60, 60], pa: [0, 0], ua: [162, 166], la: [172, 176], ms: 1400, pausa: 600 },
+    { q: [98, 126], t: 142, h: 140, th: [92, -88], sh: [-60, 60], pa: [0, 0], ua: [142, 146], la: [146, 150], ms: 1400, pausa: 900 },
+  ] },
+
+  // Quatro apoios: abre o braço para o teto, depois passa por baixo do corpo.
+  mob_agulha: { quadros: [
+    { q: [80, 108], t: 112, h: 150, th: 0, sh: -90, pa: -90, ua: [178, 0], la: [178, 0], mao: [null, [112, G]], ms: 1300, pausa: 500 },
+    { q: [80, 110], t: 100, h: 60, c: 4, th: 0, sh: -90, pa: -90, ua: [-30, 0], la: [-70, 0], mao: [null, [112, G]], ms: 1300, pausa: 700 },
+  ] },
+
+  // Joelhos no chão, braços esticados à frente; o quadril vai para trás e volta.
+  mob_sapo: { quadros: [
+    { q: [80, 106], t: 75, h: 80, th: 0, sh: -90, pa: -90, mao: [146, G], anc: 'pe', ms: 1500, pausa: 400 },
+    { q: [66, 118], t: 85, h: 88, th: 49, sh: -90, pa: -90, mao: [136, G], anc: 'pe', ms: 1500, pausa: 900 },
+  ] },
+
+  // Cócoras funda parada, cotovelos por dentro dos joelhos, respirando.
+  mob_cocoras: { quadros: [
+    { q: [94, 124], t: 165, h: 175, pe: [102, G], mao: [114, 102], cd: 1, ms: 1800 },
+    { q: [94, 123], t: 169, h: 178, pe: [102, G], mao: [115, 100], cd: 1, ms: 1800 },
+  ] },
+
   // ======================= Descanso =======================
   caminhada: { quadros: [
     { q: [100, 88], t: 178, th: [25, -20], sh: [8, -35], ua: [-25, 25], la: [-15, 40], ms: 450 },

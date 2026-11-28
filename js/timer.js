@@ -1,6 +1,6 @@
 // Motor do timer: monta a sequência de etapas e controla o tempo.
 // Usa relógio absoluto (Date.now), então não "atrasa" se o celular engasgar.
-import { TREINOS, AQUECIMENTO, ALONGAMENTO, VOLTAS, PREPARAR, DESCANSO_ATIVO } from './dados/treinos.js';
+import { TREINOS, AQUECIMENTO, ALONGAMENTO, MOBILIDADE, VOLTAS, PREPARAR, ESCOLHA, DESCANSO_ATIVO } from './dados/treinos.js';
 import { EXERCICIOS } from './dados/exercicios.js';
 import { tempos } from './plano.js';
 import { som } from './som.js';
@@ -12,6 +12,12 @@ export function montarEtapas(treinoId, semana) {
       { fase: 'descanso', exId: 'caminhada', dur: DESCANSO_ATIVO },
     ];
   }
+  if (treinoId === 'M') {
+    return [
+      { fase: 'preparar', exId: MOBILIDADE.exercicios[0], dur: PREPARAR },
+      ...MOBILIDADE.exercicios.map((id) => ({ fase: 'mobilidade', exId: id, dur: MOBILIDADE.dur, trocaLado: !!EXERCICIOS[id].ladoALado })),
+    ];
+  }
   const { esforco, pausa } = tempos(semana);
   const lista = TREINOS[treinoId].exercicios;
   const troca = (id) => !!EXERCICIOS[id].ladoALado;
@@ -20,6 +26,8 @@ export function montarEtapas(treinoId, semana) {
   for (const id of AQUECIMENTO.exercicios) {
     etapas.push({ fase: 'aquecimento', exId: id, dur: AQUECIMENTO.dur, trocaLado: troca(id) });
   }
+  // Entre o aquecimento e o 1º exercício: tempo para escolher o nível dele.
+  etapas.push({ fase: 'escolha', exId: lista[0], volta: 1, dur: ESCOLHA });
   for (let v = 1; v <= VOLTAS; v++) {
     lista.forEach((id, k) => {
       etapas.push({ fase: 'esforco', exId: id, dur: esforco, volta: v, trocaLado: troca(id) });
@@ -108,7 +116,7 @@ export class Sessao {
     this.trocou = false;
     if (this.rodando) {
       const f = this.etapa.fase;
-      f === 'pausa' || f === 'preparar' ? som.pausa() : som.esforco();
+      f === 'pausa' || f === 'preparar' || f === 'escolha' ? som.pausa() : som.esforco();
     }
     this.cb.aoMudar?.(this);
     this._tick();

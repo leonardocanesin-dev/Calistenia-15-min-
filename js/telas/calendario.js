@@ -1,6 +1,6 @@
 import { TREINOS } from '../dados/treinos.js';
 import { getEstado, atualizar } from '../storage.js';
-import { treinoDoDia, statusDoDia, sequencias, resumoMes, anoFinal, fimDoPlano } from '../plano.js';
+import { treinoDoDia, treinoSemTroca, trocarTreino, statusDoDia, sequencias, resumoMes, anoFinal, fimDoPlano } from '../plano.js';
 import { hoje, iso, deISO, dataLonga } from '../datas.js';
 import { desbloquearSom } from '../som.js';
 import { abrirTimer } from './timer.js';
@@ -44,6 +44,7 @@ export function telaCalendario(main) {
     if (st) classes.push(`st-${st}`);
     else if (plan && passado && plan !== 'D') classes.push('sem-registro');
     if (d.getTime() === h.getTime()) classes.push('hoje');
+    if (est.trocas?.[iso(d)]) classes.push('trocado');
     const letra = st === 'descanso' ? '☾' : plan ?? '';
     celulas.push(`
       <button class="${classes.join(' ')}" ${plan ? `data-dia="${iso(d)}"` : 'disabled'} style="--cor: var(--${plan ?? 'D'})">
@@ -75,12 +76,12 @@ export function telaCalendario(main) {
 
     <div class="legenda">
       <span><i class="l-A"></i>A</span><span><i class="l-B"></i>B</span><span><i class="l-C"></i>C</span><span><i class="l-D"></i>Descanso</span>
-      <span>✔ feito</span><span>✖ pulado</span><span>☾ trocado</span>
+      <span>✔ feito</span><span>✖ pulado</span><span>☾ descanso</span><span>⇄ treino trocado</span>
     </div>
 
     <section class="card">
       <h2>Plano até 31/12/${anoFinal(est)}</h2>
-      <p class="nota">Início em ${dataLonga(ini)}. Os treinos continuam alternando semanas ímpares e pares.</p>
+      <p class="nota">Início em ${dataLonga(ini)}. Os treinos seguem a ordem das semanas ímpares e pares. Trocou um dia por descanso ou por outro treino? O treino adiado vai para o dia seguinte e os outros andam junto (domingo é sempre descanso).</p>
       <button class="btn secundario" data-acao="estender">+ Estender até 31/12/${anoFinal(est) + 1}</button>
     </section>`;
 
@@ -111,6 +112,10 @@ export function abrirDia(diaISO, aoMudar) {
   const futuro = d > hoje();
   const ehHoje = diaISO === iso(hoje());
   const regs = registrosDoDia(est, diaISO);
+  const domingo = d.getDay() === 0;
+  const podeTrocar = !domingo && d >= hoje() && st !== 'feito';
+  const original = treinoSemTroca(d, est);
+  const trocado = !!est.trocas?.[diaISO];
 
   const fundo = document.createElement('div');
   fundo.className = 'folha-fundo';
@@ -127,7 +132,15 @@ export function abrirDia(diaISO, aoMudar) {
         ${plan !== 'D' ? `<button class="op ${st === 'descanso' ? 'sel' : ''}" data-st="descanso">☾ Trocar por descanso</button>` : ''}
         ${st ? `<button class="op" data-st="limpar">↺ Limpar</button>` : ''}
       </div>
-      ${futuro ? '<p class="nota">Dias futuros só podem ser trocados por descanso.</p>' : ''}
+      ${futuro ? '<p class="nota">Dias futuros só podem ser trocados por descanso ou por outro treino.</p>' : ''}
+      ${podeTrocar ? `
+        <h3 class="subtitulo">Mudar o treino deste dia</h3>
+        <div class="troca-treino">${['A', 'B', 'C', 'D'].map((t) => `
+          <button class="op ${plan === t && st !== 'descanso' ? 'sel' : ''}" data-trocar="${t}" style="--cor: var(--${t})"
+            aria-label="Trocar para ${TREINOS[t].nome}"><strong>${t}</strong><small>${t === 'D' ? 'Descanso' : TREINOS[t].subtitulo.split(' + ')[0]}</small></button>`).join('')}
+        </div>
+        <p class="nota">${trocado ? `Trocado à mão (o plano era ${TREINOS[original].nome}). ` : ''}O treino que sair deste dia passa para o próximo, e os seguintes andam junto. Domingo continua descanso.</p>
+        ${trocado ? `<button class="btn" data-trocar="${original}">↺ Voltar ao plano (${TREINOS[original].nome})</button>` : ''}` : ''}
       ${regs.length ? `
         <p class="nota">Repetições registradas neste dia: ${regs.length === 1 ? '1 treino' : `${regs.length} treinos`} (${regs.reduce((s, r) => s + totalReps(r), 0)} reps).</p>
         <button class="btn perigo-contorno" data-st="apagar-reps">🗑 Apagar repetições deste dia</button>` : ''}
@@ -137,6 +150,15 @@ export function abrirDia(diaISO, aoMudar) {
 
   fundo.addEventListener('click', async (e) => {
     if (e.target === fundo) return fundo.remove();
+    const troca = e.target.closest('[data-trocar]')?.dataset.trocar;
+    if (troca) {
+      fundo.remove();
+      atualizar((s) => {
+        trocarTreino(s, diaISO, troca);
+        if (s.dias[diaISO]?.status === 'descanso') delete s.dias[diaISO];
+      });
+      return aoMudar?.();
+    }
     const v = e.target.closest('[data-st]')?.dataset.st;
     if (!v) return;
     fundo.remove();

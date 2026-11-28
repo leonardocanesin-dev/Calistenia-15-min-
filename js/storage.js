@@ -13,6 +13,8 @@ const padrao = () => ({
   dias: {},        // { 'AAAA-MM-DD': { status: 'feito'|'pulado'|'descanso', treino } }
   registros: [],   // [{ id, data, treino, esforco, series: { exId: { nivel, valores: [..] } } }]
   dispensas: {},   // { exId: id do registro } — sugestão de subir nível dispensada
+  trocas: {},      // { 'AAAA-MM-DD': 'A'|'B'|'C'|'D' } — treino trocado à mão (os seguintes são adiados)
+  mobilidade: [],  // ['AAAA-MM-DD', ...] — dias em que fez Movimentação e Flexibilidade
 });
 
 // ---------- Backup ----------

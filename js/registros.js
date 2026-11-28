@@ -1,6 +1,7 @@
 // Registro de repetições/segundos e regra de progressão.
 import { EXERCICIOS, nivelAtual } from './dados/exercicios.js';
 import { TREINOS } from './dados/treinos.js';
+import { iso, hoje, deISO, diasEntre, segundaDaSemana } from './datas.js';
 
 export const VOLTAS_PARA_SUBIR = 3;
 export const SESSOES_PARA_SUBIR = 2;
@@ -86,4 +87,34 @@ export function dispensar(est, exId) {
   const ultimo = historico(est, exId).at(-1);
   est.dispensas ??= {};
   if (ultimo) est.dispensas[exId] = ultimo.id;
+}
+
+// ---------- Movimentação e Flexibilidade (opcional) ----------
+export function registrarMobilidade(est) {
+  est.mobilidade ??= [];
+  const dia = iso(hoje());
+  if (!est.mobilidade.includes(dia)) est.mobilidade.push(dia);
+}
+
+// Dias desde a última vez (0 = hoje), ou null se nunca fez.
+export function diasDesdeMobilidade(est) {
+  const ult = [...(est.mobilidade ?? [])].sort().at(-1);
+  return ult ? diasEntre(deISO(ult), hoje()) : null;
+}
+
+export function textoUltimaMobilidade(est) {
+  const d = diasDesdeMobilidade(est);
+  if (d == null) return 'Último treino: ainda não fez';
+  if (d === 0) return 'Último treino: hoje';
+  if (d === 1) return 'Último treino: ontem';
+  return `Último treino: ${d} dias atrás`;
+}
+
+// Quantas vezes fez na semana (seg–dom) e no mês de hoje.
+export function contagemMobilidade(est) {
+  const h = hoje();
+  const seg = iso(segundaDaSemana(h));
+  const mes = iso(h).slice(0, 7);
+  const dias = est.mobilidade ?? [];
+  return { semana: dias.filter((d) => d >= seg && d <= iso(h)).length, mes: dias.filter((d) => d.startsWith(mes)).length };
 }

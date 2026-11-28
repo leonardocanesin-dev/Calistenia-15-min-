@@ -16,11 +16,53 @@ export function semanaDoPlano(data, inicioISO) {
   return Math.max(1, Math.floor(diasEntre(s0, segundaDaSemana(data)) / 7) + 1);
 }
 
+// Ordem dos treinos de seg a sáb: semana ímpar + semana par, repetindo.
+const ORDEM = [...SEMANA_IMPAR.slice(1), ...SEMANA_PAR.slice(1)];
+
+// Agenda do plano inteiro: { 'AAAA-MM-DD': 'A'|'B'|'C'|'D' }.
+// Os treinos seguem a ORDEM, um por dia de seg a sáb; domingo é sempre descanso ativo (D).
+// Um dia trocado por descanso, ou trocado à mão para outro treino (est.trocas), não "gasta"
+// o treino previsto: ele passa para o próximo dia e todos os seguintes andam junto.
+// Dia pulado (✖) gasta o treino normalmente.
+let cache = { chave: null, agenda: null };
+export function agenda(est, { ignorarTroca } = {}) {
+  const trocas = { ...(est.trocas ?? {}) };
+  if (ignorarTroca) delete trocas[ignorarTroca];
+  const descansos = Object.keys(est.dias).filter((k) => est.dias[k]?.status === 'descanso').sort();
+  const chave = `${est.inicio}|${anoFinal(est)}|${JSON.stringify(trocas)}|${descansos.join(',')}`;
+  if (cache.chave === chave) return cache.agenda;
+
+  const mapa = {};
+  const fim = fimDoPlano(est);
+  // Começa na posição do dia da semana do início (início numa quarta = 3º treino da semana 1),
+  // assim, sem trocas, a agenda é igual à tabela de semanas ímpares/pares.
+  let k = (deISO(est.inicio).getDay() + 6) % 7;
+  for (const d = deISO(est.inicio); d <= fim; d.setDate(d.getDate() + 1)) {
+    const dia = iso(d);
+    if (d.getDay() === 0) { mapa[dia] = 'D'; continue; }
+    if (trocas[dia]) { mapa[dia] = trocas[dia]; continue; }
+    mapa[dia] = ORDEM[k % ORDEM.length];
+    if (est.dias[dia]?.status !== 'descanso') k++;
+  }
+  cache = { chave, agenda: mapa };
+  return mapa;
+}
+
 // 'A' | 'B' | 'C' | 'D', ou null se a data está fora do plano.
+// Num dia trocado por descanso, devolve o treino que foi adiado (mostrado como ☾).
 export function treinoDoDia(data, est) {
   if (data < deISO(est.inicio) || data > fimDoPlano(est)) return null;
-  const sem = semanaDoPlano(data, est.inicio);
-  return (sem % 2 ? SEMANA_IMPAR : SEMANA_PAR)[data.getDay()];
+  return agenda(est)[iso(data)] ?? null;
+}
+
+// Treino que o dia teria sem a troca manual dele (para saber se a troca é "voltar ao plano").
+export const treinoSemTroca = (data, est) => agenda(est, { ignorarTroca: iso(data) })[iso(data)] ?? null;
+
+// Troca manual do treino de um dia. Escolher o mesmo do plano desfaz a troca.
+export function trocarTreino(est, dataISO, treino) {
+  est.trocas ??= {};
+  delete est.trocas[dataISO];
+  if (treino && treinoSemTroca(deISO(dataISO), est) !== treino) est.trocas[dataISO] = treino;
 }
 
 export function tempos(semana) {

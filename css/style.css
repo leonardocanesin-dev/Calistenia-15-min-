@@ -14,6 +14,7 @@
   --aquecimento: #f5c542;
   --alongamento: #b18cff;
   --preparar: #8b93a7;
+  --mobilidade: #a3e635;
   --ok: #3ddc84;
   --raio: 18px;
   --seguro-baixo: env(safe-area-inset-bottom, 0px);
@@ -144,6 +145,25 @@ body.em-treino .abas, body.em-treino #conteudo { display: none; }
 .timer.fase-aquecimento { --cor: var(--aquecimento); }
 .timer.fase-alongamento { --cor: var(--alongamento); }
 .timer.fase-descanso { --cor: var(--D); }
+.timer.fase-escolha { --cor: var(--pausa); }
+.timer.fase-mobilidade { --cor: var(--mobilidade); }
+
+/* Seletor de nível no timer (pausa e etapa de escolha) */
+.timer .nivel-sel { display: grid; grid-template-columns: 48px 1fr 48px; align-items: center; gap: 8px; margin-top: 4px; }
+.timer .nivel-sel button { height: 42px; border-radius: 12px; background: var(--superficie-2); color: var(--cor); font-size: 26px; font-weight: 800; }
+.timer .nivel-sel button:disabled { opacity: .25; }
+.timer .nivel-sel span { text-align: center; line-height: 1.15; }
+.timer .nivel-sel small { display: block; color: var(--suave); font-size: 12px; font-weight: 600; }
+
+/* Oferta de Movimentação e Flexibilidade no fim do treino */
+.stats.duas { grid-template-columns: 1fr 1fr; margin: 12px 0 4px; }
+.stats.duas div { background: var(--superficie-2); }
+.oferta-mob { --cor: var(--mobilidade); display: grid; gap: 4px; text-align: left; background: var(--superficie);
+  border: 2px solid var(--cor); border-radius: var(--raio); padding: 14px; }
+.oferta-mob .etiqueta { color: var(--cor); font-size: 12px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.oferta-mob strong { font-size: 19px; }
+.oferta-mob small { color: var(--suave); font-size: 14px; }
+.oferta-mob .btn { margin-top: 8px; }
 
 .timer .barra-topo { display: flex; align-items: center; gap: 12px; }
 .timer .barra-topo .fechar { width: 52px; height: 52px; font-size: 22px; }
@@ -225,6 +245,12 @@ body.em-treino .abas, body.em-treino #conteudo { display: none; }
 .dia.st-descanso .letra { color: var(--D); }
 .dia.sem-registro .letra { opacity: .4; }
 .dia.hoje { outline: 2px solid var(--texto); outline-offset: -2px; }
+.dia.trocado .num::after { content: ' ⇄'; }
+.troca-treino { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.troca-treino .op { min-height: 60px; display: grid; place-items: center; gap: 0; padding: 6px 2px; }
+.troca-treino .op strong { font-size: 22px; color: var(--cor); line-height: 1; }
+.troca-treino .op small { font-size: 11px; color: var(--suave); font-weight: 600; }
+.troca-treino .op.sel { border-color: var(--cor); }
 
 .legenda { display: flex; flex-wrap: wrap; gap: 6px 14px; color: var(--suave); font-size: 13px; margin: 12px 4px 18px; }
 .legenda i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }

@@ -7,6 +7,10 @@ import { hoje, deISO, dataCurta } from '../datas.js';
 import { historico, sugestao, subirNivel, dispensar, metaReps, bateuMeta, SESSOES_PARA_SUBIR,
   totalReps, apagarComDia } from '../registros.js';
 import { confirmar, perguntar } from '../dialogo.js';
+import { MOBILIDADE } from '../dados/treinos.js';
+import { contagemMobilidade, textoUltimaMobilidade } from '../registros.js';
+import { abrirTimer } from './timer.js';
+import { desbloquearSom } from '../som.js';
 
 const fmtVals = (id, vals) => vals.join(' · ') + (EXERCICIOS[id].isometria ? ' s' : '');
 
@@ -30,6 +34,7 @@ export function telaProgresso(main) {
     <header class="cabecalho"><div class="data">Progresso</div>
       <div class="info">Visão geral, e abaixo cada exercício com seu gráfico e nível.</div></header>
     ${secaoGeral(est)}
+    ${secaoMobilidade(est)}
     ${sugestoes.map((s) => `
       <div class="sugestao">
         <div><strong>⬆ ${s.nome}</strong>: bateu a meta em ${SESSOES_PARA_SUBIR} treinos seguidos.
@@ -47,6 +52,10 @@ export function telaProgresso(main) {
 
   ligarDica(main);
   main.onclick = async (e) => {
+    if (e.target.closest('[data-acao="mobilidade"]')) {
+      desbloquearSom();
+      return abrirTimer('M', { aoFechar: () => telaProgresso(main) });
+    }
     if (e.target.closest('[data-acao="todas-sessoes"]')) {
       mostrarTodas = !mostrarTodas;
       return telaProgresso(main);
@@ -73,6 +82,21 @@ export function telaProgresso(main) {
     const ex = e.target.closest('[data-ex]')?.dataset.ex;
     if (ex) abrirEvolucao(ex, () => telaProgresso(main));
   };
+}
+
+// ---------- Movimentação e Flexibilidade ----------
+function secaoMobilidade(est) {
+  const c = contagemMobilidade(est);
+  return `
+    <section class="card" style="--cor: var(--mobilidade)">
+      <h2>${MOBILIDADE.nome}</h2>
+      <p class="sub">Opcional · ${textoUltimaMobilidade(est)}</p>
+      <div class="stats duas">
+        <div><strong>${c.semana}</strong><span>${c.semana === 1 ? 'vez' : 'vezes'} na semana</span></div>
+        <div><strong>${c.mes}</strong><span>${c.mes === 1 ? 'vez' : 'vezes'} no mês</span></div>
+      </div>
+      <button class="btn secundario" data-acao="mobilidade">▶ Fazer agora</button>
+    </section>`;
 }
 
 // ---------- Visão geral ----------

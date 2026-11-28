@@ -7,6 +7,13 @@ export const TREINOS = {
 
 export const AQUECIMENTO = { exercicios: ['polichinelo', 'circulos_braco', 'agachamento_leve', 'cat_camel'], dur: 30 };
 export const ALONGAMENTO = { exercicios: ['along_pernas', 'along_peito', 'along_ombros'], dur: 20 };
+// Opcional, oferecido ao fim de cada treino (não muda nenhum treino).
+export const MOBILIDADE = {
+  nome: 'Movimentação e Flexibilidade',
+  exercicios: ['mob_cocoras_balanco', 'mob_afastada', 'mob_mesa_invertida', 'mob_90_90', 'mob_agulha', 'mob_sapo', 'mob_cocoras'],
+  dur: 40,
+};
 export const VOLTAS = 3;
 export const PREPARAR = 10;        // contagem antes de começar
+export const ESCOLHA = 15;         // entre aquecimento e 1º exercício: escolher o nível
 export const DESCANSO_ATIVO = 15 * 60;

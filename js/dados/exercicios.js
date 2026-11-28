@@ -190,6 +190,74 @@ export const EXERCICIOS = {
     erros: ['Girar o tronco junto'],
   },
 
+  // ---------- Movimentação e Flexibilidade (opcional) ----------
+  mob_cocoras_balanco: {
+    nome: 'Cócoras com balanço',
+    como: [
+      'Agache bem fundo, pés inteiros no chão, e apoie as mãos no chão à frente.',
+      'Leve o peso devagar para as mãos, deixando os joelhos irem à frente.',
+      'Volte o peso para os pés e sente fundo de novo. Respire solto.',
+    ],
+    erros: ['Tirar os calcanhares do chão', 'Fazer rápido, com tranco'],
+  },
+  mob_afastada: {
+    nome: 'Flexão à frente, pernas afastadas',
+    como: [
+      'Em pé, pernas bem afastadas e pontas dos pés para a frente.',
+      'Dobre o quadril (não a lombar) e desça o tronco entre as pernas.',
+      'Apoie as mãos no chão e solte a cabeça. A cada expiração, desça um pouco mais.',
+    ],
+    erros: ['Travar os joelhos com força', 'Forçar com balanço'],
+  },
+  mob_mesa_invertida: {
+    nome: 'Mesa invertida',
+    como: [
+      'Sentado, joelhos dobrados, pés no chão e mãos no chão atrás do quadril.',
+      'Empurre o chão e suba o quadril até o tronco ficar reto como uma mesa.',
+      'Abra o peito, segure 1 segundo no alto e desça devagar.',
+    ],
+    erros: ['Encolher os ombros perto das orelhas', 'Deixar o quadril cair no alto'],
+  },
+  mob_90_90: {
+    nome: 'Sentado 90/90, braços acima',
+    ladoALado: true,
+    trocaTexto: 'Troque a perna da frente!',
+    como: [
+      'Sentado no chão: perna da frente dobrada a 90° na frente, a de trás dobrada a 90° atrás.',
+      'Estique os braços acima da cabeça e cresça a coluna.',
+      'Incline o tronco devagar sobre a perna da frente e volte. Troque de lado na metade.',
+    ],
+    erros: ['Arredondar as costas', 'Prender a respiração'],
+  },
+  mob_agulha: {
+    nome: 'Passa a agulha (rotação torácica)',
+    ladoALado: true,
+    como: [
+      'De quatro apoios, mãos embaixo dos ombros e joelhos embaixo do quadril.',
+      'Abra um braço para o teto, girando o peito e olhando para a mão.',
+      'Depois passe esse braço por baixo do outro, encostando o ombro no chão. Troque de lado na metade.',
+    ],
+    erros: ['Girar o quadril junto', 'Fazer rápido'],
+  },
+  mob_sapo: {
+    nome: 'Sapo com braços à frente',
+    como: [
+      'Joelhos no chão bem afastados, antebraços ou mãos no chão à frente.',
+      'Leve o quadril para trás devagar, com o peito perto do chão e os braços esticados.',
+      'Volte um pouco à frente e repita, sentindo a parte de dentro das coxas.',
+    ],
+    erros: ['Forçar a abertura dos joelhos até doer', 'Afundar a lombar'],
+  },
+  mob_cocoras: {
+    nome: 'Cócoras profunda (segurar)',
+    como: [
+      'Agache o mais fundo que conseguir, pés inteiros no chão.',
+      'Cotovelos por dentro dos joelhos, mãos juntas, peito aberto.',
+      'Fique parado respirando fundo. Se o calcanhar sobe, afaste mais os pés.',
+    ],
+    erros: ['Calcanhar saindo do chão', 'Costas muito arredondadas'],
+  },
+
   // ---------- Descanso ----------
   caminhada: {
     nome: 'Caminhada ou alongamento livre',
